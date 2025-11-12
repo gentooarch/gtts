@@ -1,9 +1,9 @@
-name: Text to Speech (gTTS)
+name: Text to Speech (gTTS to M4A)
 
 on:
   push:
     paths:
-      - "input.txt"   # 当 input.txt 被更新时自动触发
+      - "input.txt"  # 当 input.txt 更新时触发
 
 jobs:
   tts:
@@ -22,8 +22,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install gTTS
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
 
-      - name: Convert text to speech
+      - name: Convert text to speech (MP3)
         run: |
           from gtts import gTTS
           with open("input.txt", "r") as f:
@@ -32,8 +34,12 @@ jobs:
           tts.save("output.mp3")
         shell: python
 
-      - name: Upload MP3 as artifact
+      - name: Convert MP3 to M4A (AAC)
+        run: |
+          ffmpeg -y -i output.mp3 -c:a aac -b:a 128k -movflags +faststart output.m4a
+
+      - name: Upload M4A as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: speech
-          path: output.mp3
+          name: speech-m4a
+          path: output.m4a
